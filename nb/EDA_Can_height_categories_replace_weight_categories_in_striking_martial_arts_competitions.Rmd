@@ -1,0 +1,99 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+setwd("C:/Users/carlo/OneDrive/repos")
+library(dplyr)
+library(ggplot2)
+library(janitor)
+library(stringr)
+library(Amelia)
+find_text_filter <- function(df, tt){
+   df %>%
+    filter(if_any(where(is.character), ~str_detect(.x, tt)))
+
+  }
+```
+
+```{r}
+df = read.csv("data/athlete_events.csv")
+combat_sports = c("Judo","Wrestling","Boxing","Taekwondo")
+
+df %>% 
+  mutate(BMI = Weight/(Height/100)^2)
+df %>% 
+  filter(Sport == "Taekwondo") %>% 
+  ggplot(., aes(x = Games, y = Height, fill = Sex)) + 
+  geom_boxplot() + 
+  labs (title = "Distribucion de estatura de competidores\n en las últimas 5 competencias olimpicas", x = NULL, y = "Estatura(cm)") + 
+  theme(legend.position = "bottom")
+```
+
+
+```{r}
+df %>% 
+  filter(Sport %in% combat_sports) %>% 
+  select(1:13)  %>% 
+  ggplot(., aes(x = Weight, y = Height, color = Sex)) + 
+  geom_point() + 
+  labs (title = "Distribucion de estatura de competidores\n en las últimas 5 competencias olimpicas", x = NULL, y = "Estatura(cm)") + 
+  theme(legend.position = "bottom") + 
+  facet_wrap(~Sport)
+```
+
+```{r}
+
+df %>% 
+  filter(Sport %in% combat_sports) %>% 
+  select(1:13) %>% 
+  mutate(BMI = Weight/(Height/100)^2) %>%
+  na.omit() %>% 
+  group_by(Sex,Sport) %>% 
+  summarize(# Age
+            Age_mean = round(mean(Age),digits = 1),
+            Age_sd = round(sd(Age),digits = 1),
+            Age_range = round(range(Age),digits = 1),
+            # Height
+            Height_mean = round(mean(Height),digits = 1),
+            Height_sd = round(sd(Height),digits = 1),
+            Height_range = round(range(Height),digits = 1),
+            # Weight
+            Weight_mean = round(mean(Weight),digits = 1),
+            Weight_sd = round(sd(Weight),digits = 1),
+            Weight_range = round(range(Weight),digits = 1),
+            # BMI
+            BMI_mean = round(mean(BMI),digits = 1),
+            BMI_sd = round(sd(BMI),digits = 1),
+            BMI_range = round(range(BMI),digits = 1)
+            )
+```
+
+```{r}
+df_2 = df %>%
+  filter(Sport == "Taekwondo") %>%  
+  select(1:14) %>% 
+  mutate(height_categorie = ifelse(Height<120, "<120",
+                            ifelse(Height<=120 & Height<129, "120-129",
+                            ifelse(Height<=130 & Height<139, "130-139",
+                            ifelse(Height<=140 & Height<149, "140-149",
+                            ifelse(Height<=150 & Height<159, "150-159",
+                            ifelse(Height<=160 & Height<169, "160-169",
+                            ifelse(Height<=170 & Height<179, "170-179","180+")))))))) %>% 
+  na.omit() 
+table(df_2$Event,df_2$height_categorie) 
+```
+
+```{r}
+data_frame$col3 = ifelse(data_frame$col1>4,"cond1 satisfied",
+                         ifelse(data_frame$col2 %in% c("A","C"),"cond2 satisfied","both failed"))
+```
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
